@@ -806,5 +806,33 @@
 <!-- EmailJS SDK -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
+  <script>
+const LOGAI_ENDPOINT = "https://abc123.ngrok.io/api/logs";
+
+function sendLog(type, message) {
+  fetch(LOGAI_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      app: "13 Dimensions Studio",
+      type: type,
+      message: message,
+      timestamp: new Date().toISOString(),
+      url: window.location.href
+    })
+  });
+}
+
+// test logs
+sendLog("page_view", "User opened site");
+
+// click tracking
+document.addEventListener("click", (e) => {
+  sendLog("click", e.target.tagName);
+});
+</script>
+
 </body>
 </html>
