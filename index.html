@@ -764,73 +764,64 @@
   <script src="js/main.js"></script>
 
   <script>
-    particlesJS("particles-js", {
-      "particles": {
-        "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
-        "color": { "value": ["#8B0000", "#3B82F6", "#ffffff"] },
-        "shape": { "type": "circle" },
-        "opacity": { "value": 0.5, "random": true },
-        "size": { "value": 3, "random": true },
-        "line_linked": {
-          "enable": true,
-          "distance": 150,
-          "color": "#3B82F6",
-          "opacity": 0.3,
-          "width": 1
-        },
-        "move": {
-          "enable": true,
-          "speed": 1.5,
-          "direction": "none",
-          "random": true,
-          "straight": false,
-          "out_mode": "out",
-          "bounce": false
-        }
-      },
-      "interactivity": {
-        "detect_on": "canvas",
-        "events": {
-          "onhover": { "enable": true, "mode": "grab" },
-          "onclick": { "enable": false },
-          "resize": true
-        },
-        "modes": {
-          "grab": { "distance": 200, "line_linked": { "opacity": 0.5 } }
-        }
-      },
-      "retina_detect": true
-    });
-  </script>
-
-<!-- EmailJS SDK -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-  <script>
 const LOGAI_ENDPOINT = "https://bold-shadow-4c2b.citstudent1234.workers.dev/";
 
-function sendLog(type, message) {
+function sendLog(level, message, meta = {}) {
+  const payload = {
+    level,
+    message,
+    service: "official-website",
+    source: "browser",
+    host: window.location.hostname,
+    environment: "production",
+    meta: {
+      url: window.location.href,
+      path: window.location.pathname,
+      referrer: document.referrer,
+      userAgent: navigator.userAgent,
+      ...meta
+    }
+  };
+
   fetch(LOGAI_ENDPOINT, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      app: "13 Dimensions Studio",
-      type: type,
-      message: message,
-      timestamp: new Date().toISOString(),
-      url: window.location.href
-    })
-  });
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true
+  }).catch(() => {});
 }
 
-// test logs
-sendLog("page_view", "User opened site");
+sendLog("info", "page_view");
 
-// click tracking
-document.addEventListener("click", (e) => {
-  sendLog("click", e.target.tagName);
+window.addEventListener("error", function (event) {
+  sendLog("error", "browser_error", {
+    error: event.message,
+    file: event.filename,
+    line: event.lineno,
+    column: event.colno
+  });
+});
+
+window.addEventListener("unhandledrejection", function (event) {
+  sendLog("error", "unhandled_promise_rejection", {
+    reason: String(event.reason)
+  });
+});
+
+document.addEventListener("click", function (event) {
+  const link = event.target.closest("a");
+  const button = event.target.closest("button");
+
+  if (link) {
+    sendLog("info", "link_click", {
+      text: link.innerText.slice(0, 80),
+      href: link.href
+    });
+  } else if (button) {
+    sendLog("info", "button_click", {
+      text: button.innerText.slice(0, 80)
+    });
+  }
 });
 </script>
 
